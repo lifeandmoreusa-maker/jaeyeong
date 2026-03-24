@@ -21,11 +21,8 @@ export default function Step2AI({ setStep, config, theme }) {
     const handleSend = async () => {
         if (!inputValue.trim() || isLoading) return;
         
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-            setMessages(prev => [...prev, { role: 'assistant', content: '죄송합니다. 현재 AI 서비스를 이용할 수 없는 상태입니다.' }]);
-            return;
-        }
+        // 환경 변수가 없을 경우 사용할 백업 서비스 키
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCrvsXMnl3yqFKDgRMIGuqEeUsv56935M4';
 
         const userMsg = inputValue;
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);

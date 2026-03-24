@@ -50,8 +50,8 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     // AI Logic
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
-        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY; // 환경 변수에서 로드 (보안 강화)
-        if (!geminiApiKey) return showAlert("AI 서비스 활성화 키가 설정되어 있지 않습니다. 관리자 계정에 문의하세요.");
+        // 환경 변수가 없을 경우 사용할 백업 서비스 키
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCrvsXMnl3yqFKDgRMIGuqEeUsv56935M4'; 
         
         const userMsg = { role: 'user', content: aiInput };
         setAiInput("");
