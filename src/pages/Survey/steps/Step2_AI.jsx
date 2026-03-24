@@ -22,7 +22,7 @@ export default function Step2AI({ setStep, config, theme }) {
         if (!inputValue.trim() || isLoading) return;
         
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDs_WGcb7J1TpvYCyBXLe_5gYvVIZMdPyQ';
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDUj1xiTdJPJiGogOxfNKpJT1RyqEMQVCM';
         const maskedKey = apiKey ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` : "없음";
 
         const userMsg = inputValue;
