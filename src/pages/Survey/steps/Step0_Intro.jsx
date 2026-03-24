@@ -35,7 +35,7 @@ export default function Step0Intro({ setStep, setTier, config, theme }) {
                     </span>
                     <div className="verified-dot"></div>
                 </div>
-                <p className="mt-4 text-[11px] font-bold text-slate-400 tracking-[0.3em] uppercase opacity-70">
+                <p className="mt-4 text-[11px] font-bold text-white/50 tracking-[0.3em] uppercase">
                     Incar Financial Service • J-US
                 </p>
             </div>
