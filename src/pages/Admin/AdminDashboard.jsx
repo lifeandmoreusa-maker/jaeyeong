@@ -74,7 +74,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
             });
         } catch (e) { 
             console.error("AI Assistant Error:", e);
-            showAlert("AI 오류 발생: " + e.message); 
+            showAlert("AI 시스템 오류가 발생했습니다.\n\n오류 내용: " + e.message + "\n\n(API 키 권한 혹은 네트워크 설정을 확인해 주세요)"); 
         }
         setIsAiLoading(false);
     };

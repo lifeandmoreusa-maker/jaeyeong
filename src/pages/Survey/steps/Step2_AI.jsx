@@ -50,7 +50,8 @@ export default function Step2AI({ setStep, config, theme }) {
             setMessages(prev => [...prev, { role: 'assistant', content: text }]);
         } catch (error) {
             console.error("AI Error:", error);
-            setMessages(prev => [...prev, { role: 'assistant', content: '죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.' }]);
+            const errorMsg = "AI 답변 생성 중 오류가 발생했습니다.\n\n상세 오류: " + error.message;
+            setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
         } finally {
             setIsLoading(false);
         }
