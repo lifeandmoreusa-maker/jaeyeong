@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Icon } from '../../../components/Icon';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function Step2AI({ setStep, config, theme }) {
     const [messages, setMessages] = useState([
         { role: 'assistant', content: '안녕하세요! 저는 금융 AI 도우미입니다. 재무 설계, 자산 관리, 세무 등 어떤 점이 궁금하신가요?' }
     ]);
     const [inputValue, setInputValue] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const chatEndRef = useRef(null);
-
-    const expertName = config.expertName || config.expertProfile || "전문가";
 
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -18,14 +18,45 @@ export default function Step2AI({ setStep, config, theme }) {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = () => {
-        if (!inputValue.trim()) return;
-        const newMessages = [...messages, { role: 'user', content: inputValue }];
-        setMessages(newMessages);
+    const handleSend = async () => {
+        if (!inputValue.trim() || isLoading) return;
+        
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!apiKey) {
+            setMessages(prev => [...prev, { role: 'assistant', content: '죄송합니다. 현재 AI 서비스를 이용할 수 없는 상태입니다.' }]);
+            return;
+        }
+
+        const userMsg = inputValue;
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setInputValue('');
-        setTimeout(() => {
-            setMessages(prev => [...prev, { role: 'assistant', content: '입력하신 내용에 대한 AI 답변을 준비 중입니다. (이곳에 제미나이 API 결과가 연결될 예정입니다)' }]);
-        }, 1000);
+        setIsLoading(true);
+
+        try {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ 
+                model: "gemini-2.0-flash",
+                systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 고객의 질문에 대해 정확하고 신뢰감 있는 답변을 제공하며, 전문적인 상담이 필요할 경우 '전문가와 직접 상담하기'를 권유하세요. 답변은 핵심 위주로 이해하기 쉽게 작성해주세요."
+            });
+
+            const chat = model.startChat({
+                history: messages.map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.content }]
+                })),
+            });
+
+            const result = await chat.sendMessage(userMsg);
+            const response = await result.response;
+            const text = response.text();
+
+            setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+        } catch (error) {
+            console.error("AI Error:", error);
+            setMessages(prev => [...prev, { role: 'assistant', content: '죄송합니다. 답변을 생성하는 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.' }]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -81,6 +112,14 @@ export default function Step2AI({ setStep, config, theme }) {
                             </div>
                         </div>
                     ))}
+                    {isLoading && (
+                        <div className="flex justify-start animate-pulse">
+                            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 mr-3 mt-1"></div>
+                            <div className="max-w-[85%] rounded-[1.5rem] p-5 bg-white/5 text-slate-400 text-xs italic font-bold rounded-tl-none border border-white/5">
+                                AI가 정보를 분석하고 있습니다...
+                            </div>
+                        </div>
+                    )}
                     <div ref={chatEndRef} />
                 </div>
             </div>
@@ -96,17 +135,19 @@ export default function Step2AI({ setStep, config, theme }) {
                             onKeyDown={handleKeyDown}
                             placeholder="궁금한 내용을 입력하세요..." 
                             className="flex-1 bg-transparent px-6 py-4 text-sm font-bold focus:outline-none placeholder:text-slate-600 text-white"
+                            disabled={isLoading}
                         />
                         <button 
                             onClick={handleSend}
-                            className="gradient-btn-premium w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all flex-shrink-0"
+                            disabled={isLoading}
+                            className="gradient-btn-premium w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-all flex-shrink-0 disabled:opacity-50"
                         >
                             <Icon name="send" size={18} className="translate-x-[1px]" />
                         </button>
                     </div>
 
                     <button 
-                        onClick={() => window.open('https://pf.kakao.com/', '_blank')}
+                        onClick={() => window.open((config.kakaoUrl || 'https://pf.kakao.com/'), '_blank')}
                         className="w-full bg-[#FEE500] text-[#191919] rounded-[1.25rem] py-3 font-black text-[13px] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all"
                     >
                         <Icon name="message-circle" size={16} /> 신속한 맞춤상담은 카카오톡으로
