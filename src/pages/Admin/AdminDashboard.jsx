@@ -51,7 +51,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC38F9Pj-U8Hk3LMAesfqPP2CgwWkth-X8'; 
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDs_WGcb7J1TpvYCyBXLe_5gYvVIZMdPyQ'; 
         const maskedKey = geminiApiKey ? `${geminiApiKey.substring(0, 4)}...${geminiApiKey.substring(geminiApiKey.length - 4)}` : "없음";
         
         const userMsg = { role: 'user', content: aiInput };
@@ -64,7 +64,8 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
             });
 
             const genAI = new GoogleGenerativeAI(geminiApiKey);
-            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+            // 명시적인 'models/' 프리픽스를 사용하여 404 오류 방지
+            const modelsToTry = ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-pro"];
             let lastError = null;
             let success = false;
 
@@ -102,7 +103,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
 
         } catch (e) { 
             console.error("AI Assistant Error:", e);
-            showAlert(`AI 시스템 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n오류 내용: ${e.message}\n\n(Vercel 설정과 API 키 권한을 다시 한번 확인해 주세요)`); 
+            showAlert(`AI 시스템 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n오류 내용: ${e.message}\n\n(Vercel 설정과 'Generative Language API' 활성화 여부를 확인해 주세요)`); 
         } finally {
             setIsAiLoading(false);
         }

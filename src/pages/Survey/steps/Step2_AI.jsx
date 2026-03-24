@@ -22,7 +22,7 @@ export default function Step2AI({ setStep, config, theme }) {
         if (!inputValue.trim() || isLoading) return;
         
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC38F9Pj-U8Hk3LMAesfqPP2CgwWkth-X8';
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDs_WGcb7J1TpvYCyBXLe_5gYvVIZMdPyQ';
         const maskedKey = apiKey ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` : "없음";
 
         const userMsg = inputValue;
@@ -32,7 +32,8 @@ export default function Step2AI({ setStep, config, theme }) {
 
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+            // 명시적인 'models/' 프리픽스를 사용하여 404 오류 방지
+            const modelsToTry = ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-pro"];
             let lastError = null;
             let success = false;
 
@@ -71,7 +72,7 @@ export default function Step2AI({ setStep, config, theme }) {
 
         } catch (error) {
             console.error('Error generating AI response:', error);
-            const errorMsg = `AI 답변 생성 중 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n상세 오류: ${error.message}`;
+            const errorMsg = `AI 답변 생성 중 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n상세 오류: ${error.message}\n\n(Vercel 설정과 'Generative Language API' 활성화 여부를 확인해 주세요)`;
             setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
             alert(errorMsg);
         } finally {
