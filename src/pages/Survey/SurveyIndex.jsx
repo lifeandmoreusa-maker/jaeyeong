@@ -34,14 +34,16 @@ export default function SurveyIndex({ config, setConfig, setView, theme, appId, 
 
             <div className="mt-auto relative z-10">
                 <div className="bg-[#0a0f1e] border-t border-white/5 w-full py-10 px-8 flex flex-col items-center">
-                    <img 
-                        src="/incar_white_top.png" 
-                        alt="인카금융 제이어스" 
-                        className="h-14 sm:h-16 object-contain opacity-70 hover:opacity-100 transition-all duration-500 hover:scale-105"
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                        }}
-                    />
+                    <a href="https://www.incarjus.co.kr/ceo" target="_blank" rel="noreferrer" className="block hover:scale-105 transition-transform">
+                        <img 
+                            src="/incar_white_top.png" 
+                            alt="인카금융 제이어스" 
+                            className="h-14 sm:h-16 object-contain opacity-70 hover:opacity-100 transition-opacity duration-500"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                            }}
+                        />
+                    </a>
                     <div className="mt-4 text-center">
                         <p className="text-[10px] font-black tracking-[0.4em] leading-none text-[#2eadff] uppercase">
                             Your Lifetime Financial Partner
