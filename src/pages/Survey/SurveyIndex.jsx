@@ -35,9 +35,9 @@ export default function SurveyIndex({ config, setConfig, setView, theme, appId, 
             <div className="mt-auto relative z-10">
                 <div className="bg-[#0a0f1e] border-t border-white/5 w-full py-10 px-8 flex flex-col items-center">
                     <img 
-                        src="/인카로고.png" 
+                        src="/incar_white_top.png" 
                         alt="인카금융 제이어스" 
-                        className="h-20 sm:h-24 object-contain brightness-0 invert opacity-80 hover:opacity-100 transition-all duration-500 hover:scale-105"
+                        className="h-14 sm:h-16 object-contain opacity-70 hover:opacity-100 transition-all duration-500 hover:scale-105"
                         onError={(e) => {
                             e.target.style.display = 'none';
                         }}
