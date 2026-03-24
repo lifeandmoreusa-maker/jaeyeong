@@ -51,7 +51,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCrvsXMnl3yqFKDgRMIGuqEeUsv56935M4'; 
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAAa-3bs8huc4d49GwMYW94hvI1anO99xc'; 
         
         const userMsg = { role: 'user', content: aiInput };
         setAiInput("");
@@ -62,7 +62,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
             });
             const genAI = new GoogleGenerativeAI(geminiApiKey);
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-1.5-pro",
+                model: "gemini-1.5-flash",
                 systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 유능한 비서입니다. 핵심 위주로 명료하고 전문적으로 답변하며 상담 준비를 돕습니다."
             });
             const chat = model.startChat({

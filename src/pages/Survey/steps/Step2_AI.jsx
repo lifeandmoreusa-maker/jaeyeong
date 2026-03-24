@@ -22,7 +22,7 @@ export default function Step2AI({ setStep, config, theme }) {
         if (!inputValue.trim() || isLoading) return;
         
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyCrvsXMnl3yqFKDgRMIGuqEeUsv56935M4';
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAAa-3bs8huc4d49GwMYW94hvI1anO99xc';
 
         const userMsg = inputValue;
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
@@ -32,7 +32,7 @@ export default function Step2AI({ setStep, config, theme }) {
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-1.5-pro",
+                model: "gemini-1.5-flash",
                 systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 고객의 질문에 대해 정확하고 신뢰감 있는 답변을 제공하며, 전문적인 상담이 필요할 경우 '전문가와 직접 상담하기'를 권유하세요. 답변은 핵심 위주로 이해하기 쉽게 작성해주세요."
             });
 
