@@ -50,7 +50,8 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     // AI Logic
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
-        if (!config.geminiApiKey) return showAlert("Settings 탭에서 제미나이 API 키를 입력해 주세요.");
+        const geminiApiKey = 'AIzaSyCrvsXMnl3yqFKDgRMIGuqEeUsv56935M4'; // 하드코딩된 서비스용 키
+        
         const userMsg = { role: 'user', content: aiInput };
         setAiInput("");
         setIsAiLoading(true);
@@ -58,10 +59,10 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_chats', config.merchantId, 'messages'), {
                 role: 'user', content: aiInput, createdAt: serverTimestamp()
             });
-            const genAI = new GoogleGenerativeAI(config.geminiApiKey);
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
             const model = genAI.getGenerativeModel({ 
                 model: "gemini-2.0-flash",
-                systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 비서입니다."
+                systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 유능한 비서입니다. 핵심 위주로 명료하고 전문적으로 답변하며 상담 준비를 돕습니다."
             });
             const chat = model.startChat({
                 history: aiMessages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }))
@@ -383,28 +384,25 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
                         </div>
 
                         <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 h-fit">
-                            <h3 className="text-sm font-black mb-8 italic text-indigo-600 uppercase tracking-tighter flex items-center gap-2"><Icon name="brain" size={18}/> AI Assistant Configuration</h3>
+                            <h3 className="text-sm font-black mb-8 italic text-indigo-600 uppercase tracking-tighter flex items-center gap-2"><Icon name="brain" size={18}/> Financial AI Configuration</h3>
                             <div className="space-y-8">
-                                <div>
-                                    <label className="text-[10px] font-black text-indigo-600 ml-1 uppercase mb-3 block italic tracking-widest">Gemini API Key</label>
-                                    <input 
-                                        type="password" 
-                                        className="w-full p-4 bg-indigo-50 border border-indigo-100 rounded-2xl font-black text-sm text-indigo-900 outline-none" 
-                                        value={config.geminiApiKey || ''} 
-                                        onChange={e => setConfig({...config, geminiApiKey: e.target.value})} 
-                                        placeholder="AIzaSy..."
-                                    />
+                                <div className="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-3 opacity-20"><Icon name="shield" size={40} className="text-indigo-400" /></div>
+                                    <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest mb-1">Service Status</p>
+                                    <p className="text-sm font-black text-indigo-900 underline decoration-indigo-400">Gemini AI Premium Active</p>
+                                    <p className="text-[9px] text-indigo-400 mt-2 font-bold leading-relaxed italic">통합 유료 서비스가 적용되어 있습니다. 별도의 API 키 설정 없이 즉시 사용 가능합니다.</p>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-black text-indigo-600 ml-1 uppercase mb-3 block italic tracking-widest">Assistant Role (System Prompt)</label>
+                                    <label className="text-[10px] font-black text-indigo-600 ml-1 uppercase mb-3 block italic tracking-widest">Assistant Role (AI Gems)</label>
                                     <textarea 
-                                        className="w-full p-5 bg-indigo-50 border border-indigo-100 rounded-2xl font-bold text-sm h-48 resize-none text-slate-800 leading-relaxed" 
+                                        className="w-full p-5 bg-indigo-50 border border-indigo-100 rounded-2xl font-bold text-sm h-48 resize-none text-slate-800 leading-relaxed outline-none focus:ring-2 focus:ring-indigo-500/20" 
                                         value={config.aiSystemPrompt || ''} 
                                         onChange={e => setConfig({...config, aiSystemPrompt: e.target.value})} 
-                                        placeholder="AI 어시스턴트의 성격(Gems)을 정의하세요"
+                                        placeholder="AI 어시스턴트의 성격(Gems)을 정의하여 상담 품질을 높이세요"
                                     />
+                                    <p className="text-[9px] text-slate-400 mt-2 ml-1 italic font-medium">※ 역할을 구체적으로 적을수록 더 정확한 상담 지원이 가능합니다.</p>
                                 </div>
-                                <button onClick={handleSaveConfig} className="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all">Save AI Settings</button>
+                                <button onClick={handleSaveConfig} className="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-xs uppercase shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all">Save AI Config</button>
                             </div>
                         </div>
                     </div>
