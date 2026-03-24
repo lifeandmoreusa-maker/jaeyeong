@@ -62,7 +62,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
             });
             const genAI = new GoogleGenerativeAI(geminiApiKey);
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-pro",
+                model: "gemini-1.5-flash",
                 systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 유능한 비서입니다. 핵심 위주로 명료하고 전문적으로 답변하며 상담 준비를 돕습니다."
             });
             // 히스토리는 반드시 'user'로 시작해야 함 (첫 번째 모델 환영 메시지 등 제외)
