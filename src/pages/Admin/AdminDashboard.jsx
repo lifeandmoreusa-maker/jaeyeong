@@ -51,40 +51,61 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC38F9Pj-U8Hk3LMAesfqPP2CgwWkth-X8'; 
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC38F9Pj-U8Hk3LMAesfqPP2CgwWkth-X8'; 
+        const maskedKey = geminiApiKey ? `${geminiApiKey.substring(0, 4)}...${geminiApiKey.substring(geminiApiKey.length - 4)}` : "없음";
         
         const userMsg = { role: 'user', content: aiInput };
         setAiInput("");
         setIsAiLoading(true);
+
         try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_chats', config.merchantId, 'messages'), {
                 role: 'user', content: aiInput, createdAt: serverTimestamp()
             });
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash-exp",
-                systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 핵심 위주로 명료하고 전문적으로 답변을 제공하세요."
-            });
-            const chatHistory = aiMessages.map(m => ({ 
-                role: m.role === 'user' ? 'user' : 'model', 
-                parts: [{ text: m.content }] 
-            }));
-            const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
-            const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
 
-            // 더 안정적인 generateContent 직접 호출 방식 (v1beta 의존성 회피)
-            const result = await model.generateContent({ 
-                contents: [...validHistory, { role: 'user', parts: [{ text: aiInput }] }] 
-            });
-            const response = await result.response;
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_chats', config.merchantId, 'messages'), {
-                role: 'assistant', content: response.text(), createdAt: serverTimestamp()
-            });
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+            let lastError = null;
+            let success = false;
+
+            for (const modelName of modelsToTry) {
+                try {
+                    const model = genAI.getGenerativeModel({ 
+                        model: modelName,
+                        systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 유능한 비서입니다. 핵심 위주로 명료하고 전문적으로 답변하며 상담 준비를 돕습니다."
+                    });
+
+                    const chatHistory = aiMessages.map(m => ({ 
+                        role: m.role === 'user' ? 'user' : 'model', 
+                        parts: [{ text: m.content }] 
+                    }));
+                    const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
+                    const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
+
+                    const result = await model.generateContent({ 
+                        contents: [...validHistory, { role: 'user', parts: [{ text: aiInput }] }] 
+                    });
+                    
+                    const response = await result.response;
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_chats', config.merchantId, 'messages'), {
+                        role: 'assistant', content: response.text(), createdAt: serverTimestamp()
+                    });
+                    success = true;
+                    break; 
+                } catch (err) {
+                    console.warn(`Model ${modelName} failed:`, err);
+                    lastError = err;
+                }
+            }
+
+            if (!success) throw lastError;
+
         } catch (e) { 
             console.error("AI Assistant Error:", e);
-            showAlert("AI 시스템 오류가 발생했습니다.\n\n오류 내용: " + e.message + "\n\n(API 키 권한 혹은 네트워크 설정을 확인해 주세요)"); 
+            showAlert(`AI 시스템 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n오류 내용: ${e.message}\n\n(Vercel 설정과 API 키 권한을 다시 한번 확인해 주세요)`); 
+        } finally {
+            setIsAiLoading(false);
         }
-        setIsAiLoading(false);
     };
 
     const clearChatHistory = async () => {

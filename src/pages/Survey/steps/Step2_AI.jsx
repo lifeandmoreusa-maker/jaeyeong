@@ -23,39 +23,57 @@ export default function Step2AI({ setStep, config, theme }) {
         
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
         const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC38F9Pj-U8Hk3LMAesfqPP2CgwWkth-X8';
+        const maskedKey = apiKey ? `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}` : "없음";
 
         const userMsg = inputValue;
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-        setInputValue('');
+        setInputValue("");
         setIsLoading(true);
 
         try {
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ 
-                model: "gemini-2.0-flash-exp",
-                systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 고객의 질문에 대해 정확하고 신뢰감 있는 답변을 제공하며, 전문적인 상담이 필요할 경우 '전문가와 직접 상담하기'를 권유하세요. 답변은 핵심 위주로 이해하기 쉽게 작성해주세요."
-            });
+            const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+            let lastError = null;
+            let success = false;
 
-            // 히스토리는 반드시 'user'로 시작해야 함 (첫 번째 모델 환영 메시지 등 제외)
-            const chatHistory = messages.map(m => ({
-                role: m.role === 'user' ? 'user' : 'model',
-                parts: [{ text: m.content }]
-            }));
-            const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
-            const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
+            for (const modelName of modelsToTry) {
+                try {
+                    const model = genAI.getGenerativeModel({ 
+                        model: modelName,
+                        systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 고객의 질문에 대해 정확하고 신뢰감 있는 답변을 제공하며, 전문적인 상담이 필요할 경우 '전문가와 직접 상담하기'를 권유하세요. 답변은 핵심 위주로 이해하기 쉽게 작성해주세요."
+                    });
 
-            // 더 안정적인 generateContent 직접 호출 방식 (startChat의 v1beta 의존성 회피)
-            const result = await model.generateContent({ 
-                contents: [...validHistory, { role: 'user', parts: [{ text: userMsg }] }] 
-            });
-            const response = await result.response;
-            const text = response.text();
+                    // 히스토리는 반드시 'user'로 시작해야 함 (첫 번째 모델 환영 메시지 등 제외)
+                    const chatHistory = messages.map(m => ({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.content }]
+                    }));
+                    const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
+                    const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
 
-            setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+                    // 더 안정적인 generateContent 직접 호출 방식 (startChat의 v1beta 의존성 회피)
+                    const result = await model.generateContent({ 
+                        contents: [...validHistory, { role: 'user', parts: [{ text: userMsg }] }] 
+                    });
+                    const response = await result.response;
+                    const text = response.text();
+
+                    setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+                    success = true;
+                    break;
+                } catch (err) {
+                    console.warn(`Model ${modelName} failed:`, err);
+                    lastError = err;
+                }
+            }
+
+            if (!success) throw lastError;
+
         } catch (error) {
-            console.error("AI Error:", error);
-            const errorMsg = "AI 답변 생성 중 오류가 발생했습니다.\n\n상세 오류: " + error.message;
+            console.error('Error generating AI response:', error);
+            const errorMsg = `AI 답변 생성 중 오류가 발생했습니다.\n\n사용 중인 키: ${maskedKey}\n상세 오류: ${error.message}`;
             setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+            alert(errorMsg);
         } finally {
             setIsLoading(false);
         }
