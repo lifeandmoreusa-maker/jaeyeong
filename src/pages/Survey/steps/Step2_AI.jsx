@@ -44,9 +44,10 @@ export default function Step2AI({ setStep, config, theme }) {
             const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
             const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
 
-            const chat = model.startChat({ history: validHistory });
-
-            const result = await chat.sendMessage(userMsg);
+            // 더 안정적인 generateContent 직접 호출 방식 (startChat의 v1beta 의존성 회피)
+            const result = await model.generateContent({ 
+                contents: [...validHistory, { role: 'user', parts: [{ text: userMsg }] }] 
+            });
             const response = await result.response;
             const text = response.text();
 
