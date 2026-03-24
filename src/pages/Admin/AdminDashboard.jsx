@@ -86,7 +86,9 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
         return leads.filter(l => {
             const customerMatch = (l.name || "").toLowerCase().includes(filters.customerName.toLowerCase());
             const referrerMatch = (l.region || "").toLowerCase().includes(filters.referrer.toLowerCase()); // 소개자 필터링
-            const consultedMatch = filters.isConsulted === "all" || String(l.isConsulted) === filters.isConsulted;
+            const consultedMatch = filters.isConsulted === "all" 
+                || (filters.isConsulted === "true" && (l.status === "상담완료" || l.isConsulted === true)) 
+                || (filters.isConsulted === "false" && (l.status === "대기" || (!l.status && l.isConsulted === false)));
             
             let ymMatch = true;
             if (filters.yearMonth && l.createdAt?.toDate) {
@@ -111,12 +113,13 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
 
     const handleExportExcel = () => {
         if (filteredLeads.length === 0) return showAlert("내보낼 데이터가 없습니다.");
-        const headers = ["No.", "접수일", "고객명", "연락처", "생년월일", "소개자명", "상담신청내용", "상담상태"];
+        const headers = ["No.", "접수일", "고객명", "연락처", "생년월일", "소개자명", "상담신청내용", "관리상태"];
         const rows = filteredLeads.map((l, i) => {
             const date = l.createdAt?.toDate() ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(l.createdAt.toDate()) : "-";
             const reqInfo = `[${l.category}] ${l.interest} / 가능시간: ${l.availableTime || "미지정"}`;
+            const statusStr = l.status || (l.isConsulted ? "상담완료" : "대기");
             return [
-                filteredLeads.length - i, date, l.name, l.phone, l.birth, l.region, reqInfo, l.isConsulted ? "상담완료" : "상담대기"
+                filteredLeads.length - i, date, l.name, l.phone, l.birth, l.region, reqInfo, statusStr
             ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
         });
         const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
@@ -230,16 +233,24 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
                                                         </div>
                                                     </td>
                                                     <td className="p-5">
-                                                        <button 
-                                                            onClick={() => handleStatusUpdate(l.id, 'isConsulted', !l.isConsulted)}
-                                                            className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm ${
-                                                                l.isConsulted 
-                                                                    ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                                                        <select 
+                                                            value={l.status || (l.isConsulted ? "상담완료" : "대기")}
+                                                            onChange={(e) => handleStatusUpdate(l.id, 'status', e.target.value)}
+                                                            className={`w-full p-2.5 rounded-xl text-[10px] font-black uppercase transition-all shadow-sm outline-none border-0 cursor-pointer ${
+                                                                (l.status === '상담완료' || (!l.status && l.isConsulted)) 
+                                                                    ? 'bg-emerald-500 text-white' 
+                                                                    : l.status === '진행중' ? 'bg-indigo-600 text-white'
+                                                                    : l.status === '부재중' ? 'bg-amber-500 text-white'
+                                                                    : l.status === '보류' ? 'bg-slate-400 text-white'
                                                                     : 'bg-indigo-50 text-indigo-600'
                                                             }`}
                                                         >
-                                                            {l.isConsulted ? '상담완료' : '상담대기'}
-                                                        </button>
+                                                            <option value="대기">대기</option>
+                                                            <option value="진행중">진행중</option>
+                                                            <option value="상담완료">상담완료</option>
+                                                            <option value="부재중">부재중</option>
+                                                            <option value="보류">보류</option>
+                                                        </select>
                                                     </td>
                                                     <td className="p-5 text-center">
                                                         <button onClick={() => handleDeleteLead(l.id)} className="p-2.5 text-slate-200 hover:text-rose-500 transition-colors">
@@ -260,8 +271,8 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
                                     </div>
                                     <div className="h-8 w-px bg-slate-100 mx-2"></div>
                                     <div className="flex flex-col">
-                                        <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">Pending Consults</span>
-                                        <span className="text-2xl font-black italic text-indigo-600">{filteredLeads.filter(l => !l.isConsulted).length} 건</span>
+                                        <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">Pending / Ongoing</span>
+                                        <span className="text-2xl font-black italic text-indigo-600">{filteredLeads.filter(l => (l.status === '대기' || l.status === '진행중') || (!l.status && !l.isConsulted)).length} 건</span>
                                     </div>
                                 </div>
                                 <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl flex items-center gap-3">
