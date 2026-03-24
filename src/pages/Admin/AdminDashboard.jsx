@@ -65,9 +65,15 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
                 model: "gemini-1.5-pro",
                 systemInstruction: config.aiSystemPrompt || "당신은 금융 전문가의 유능한 비서입니다. 핵심 위주로 명료하고 전문적으로 답변하며 상담 준비를 돕습니다."
             });
-            const chat = model.startChat({
-                history: aiMessages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }))
-            });
+            // 히스토리는 반드시 'user'로 시작해야 함 (첫 번째 모델 환영 메시지 등 제외)
+            const chatHistory = aiMessages.map(m => ({ 
+                role: m.role === 'user' ? 'user' : 'model', 
+                parts: [{ text: m.content }] 
+            }));
+            const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
+            const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
+
+            const chat = model.startChat({ history: validHistory });
             const result = await chat.sendMessage(aiInput);
             const response = await result.response;
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admin_chats', config.merchantId, 'messages'), {

@@ -36,12 +36,15 @@ export default function Step2AI({ setStep, config, theme }) {
                 systemInstruction: "당신은 금융 전문가의 친절하고 전문적인 AI 비서입니다. 고객의 질문에 대해 정확하고 신뢰감 있는 답변을 제공하며, 전문적인 상담이 필요할 경우 '전문가와 직접 상담하기'를 권유하세요. 답변은 핵심 위주로 이해하기 쉽게 작성해주세요."
             });
 
-            const chat = model.startChat({
-                history: messages.map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.content }]
-                })),
-            });
+            // 히스토리는 반드시 'user'로 시작해야 함 (첫 번째 모델 환영 메시지 등 제외)
+            const chatHistory = messages.map(m => ({
+                role: m.role === 'user' ? 'user' : 'model',
+                parts: [{ text: m.content }]
+            }));
+            const firstUserIndex = chatHistory.findIndex(m => m.role === 'user');
+            const validHistory = firstUserIndex !== -1 ? chatHistory.slice(firstUserIndex) : [];
+
+            const chat = model.startChat({ history: validHistory });
 
             const result = await chat.sendMessage(userMsg);
             const response = await result.response;
