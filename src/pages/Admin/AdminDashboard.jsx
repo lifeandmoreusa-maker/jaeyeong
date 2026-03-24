@@ -51,7 +51,7 @@ export default function AdminDashboard({ adminType, setAdminType, user, config, 
     const handleAiSend = async () => {
         if (!aiInput.trim()) return;
         // 환경 변수가 없을 경우 사용할 백업 서비스 키
-        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAAa-3bs8huc4d49GwMYW94hvI1anO99xc'; 
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyD9sB6uGOZZxKCayiSNUTHTOjlDAUmcbkM'; 
         
         const userMsg = { role: 'user', content: aiInput };
         setAiInput("");
